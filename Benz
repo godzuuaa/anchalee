@@ -1,0 +1,59 @@
+--// Services
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+
+local PlaceId = game.PlaceId
+
+--// GUI สร้างหน้าต่าง
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "JoinServerGUI"
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 300, 0, 150)
+Frame.Position = UDim2.new(0.35, 0, 0.35, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true
+
+-- Title
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Text = "Join Server by ServerId"
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 20
+
+-- ช่องกรอก ServerId
+local TextBox = Instance.new("TextBox", Frame)
+TextBox.Size = UDim2.new(1, -20, 0, 40)
+TextBox.Position = UDim2.new(0, 10, 0, 60)
+TextBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextBox.PlaceholderText = "กรอก ServerId ที่นี่"
+TextBox.Font = Enum.Font.SourceSans
+TextBox.TextSize = 18
+TextBox.ClearTextOnFocus = false
+
+-- ปุ่ม Join
+local Button = Instance.new("TextButton", Frame)
+Button.Size = UDim2.new(1, -20, 0, 40)
+Button.Position = UDim2.new(0, 10, 0, 110)
+Button.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+Button.Font = Enum.Font.SourceSansBold
+Button.TextSize = 18
+Button.Text = "Join Server"
+
+-- Event เมื่อกดปุ่ม
+Button.MouseButton1Click:Connect(function()
+    local serverId = TextBox.Text
+    if serverId and serverId ~= "" then
+        TeleportService:TeleportToPlaceInstance(PlaceId, serverId, Players.LocalPlayer)
+    else
+        warn("⚠️ กรุณากรอก ServerId ก่อน")
+    end
+end)
