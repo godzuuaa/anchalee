@@ -1,59 +1,74 @@
---// Services
-local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
 
-local PlaceId = game.PlaceId
+-- สร้าง GUI
+local screenGui = Instance.new("ScreenGui", PlayerGui)
+screenGui.Name = "TeleportGui"
 
---// GUI สร้างหน้าต่าง
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = game.CoreGui
-ScreenGui.Name = "JoinServerGUI"
+-- ปุ่ม Start/Stop
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 100, 0, 50)
+toggleButton.Position = UDim2.new(0, 10, 0, 10)
+toggleButton.Text = "Start"
+toggleButton.Parent = screenGui
 
-local Frame = Instance.new("Frame", ScreenGui)
-Frame.Size = UDim2.new(0, 300, 0, 150)
-Frame.Position = UDim2.new(0.35, 0, 0.35, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-Frame.BorderSizePixel = 0
-Frame.Active = true
-Frame.Draggable = true
+-- กล่องใส่ delay
+local delayBox = Instance.new("TextBox")
+delayBox.Size = UDim2.new(0, 100, 0, 30)
+delayBox.Position = UDim2.new(0, 10, 0, 70)
+delayBox.PlaceholderText = "Delay (วินาที)"
+delayBox.Text = "5"
+delayBox.Parent = screenGui
 
--- Title
-local Title = Instance.new("TextLabel", Frame)
-Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Position = UDim2.new(0, 0, 0, 0)
-Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Text = "Join Server by ServerId"
-Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 20
+-- รายการตำแหน่งที่ต้องการวาร์ป
+local teleportPositions = {
+	CFrame.new(87, 2, -27),
+	CFrame.new(88, 2, 0),
+	CFrame.new(-80, 5, -14),
+	CFrame.new(-283, 2, -32),
+	CFrame.new(-286, 2, -2),
+	CFrame.new(-237, 2, 36),
+	CFrame.new(-101, 2, 36),
+}
 
--- ช่องกรอก ServerId
-local TextBox = Instance.new("TextBox", Frame)
-TextBox.Size = UDim2.new(1, -20, 0, 40)
-TextBox.Position = UDim2.new(0, 10, 0, 60)
-TextBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-TextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextBox.PlaceholderText = "กรอก ServerId ที่นี่"
-TextBox.Font = Enum.Font.SourceSans
-TextBox.TextSize = 18
-TextBox.ClearTextOnFocus = false
+-- ตัวแปรควบคุม
+local isRunning = false
+local currentTeleportThread
 
--- ปุ่ม Join
-local Button = Instance.new("TextButton", Frame)
-Button.Size = UDim2.new(1, -20, 0, 40)
-Button.Position = UDim2.new(0, 10, 0, 110)
-Button.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-Button.Font = Enum.Font.SourceSansBold
-Button.TextSize = 18
-Button.Text = "Join Server"
+-- ฟังก์ชันวาร์ป
+local function sequentialTeleport()
+	local currentIndex = 1
 
--- Event เมื่อกดปุ่ม
-Button.MouseButton1Click:Connect(function()
-    local serverId = TextBox.Text
-    if serverId and serverId ~= "" then
-        TeleportService:TeleportToPlaceInstance(PlaceId, serverId, Players.LocalPlayer)
-    else
-        warn("⚠️ กรุณากรอก ServerId ก่อน")
-    end
+	while isRunning do
+		-- อ่านค่าหน่วงจาก TextBox
+		local delayTime = tonumber(delayBox.Text) or 5
+		delayTime = math.clamp(delayTime, 1, 60) -- จำกัดระหว่าง 1-60 วินาที
+
+		task.wait(delayTime)
+
+		local character = player.Character or player.CharacterAdded:Wait()
+		local hrp = character:FindFirstChild("HumanoidRootPart")
+
+		if hrp then
+			hrp.CFrame = teleportPositions[currentIndex]
+
+			currentIndex += 1
+			if currentIndex > #teleportPositions then
+				currentIndex = 1
+			end
+		end
+	end
+end
+
+-- ปุ่ม toggle เริ่ม/หยุด
+toggleButton.MouseButton1Click:Connect(function()
+	isRunning = not isRunning
+
+	if isRunning then
+		toggleButton.Text = "Stop"
+		currentTeleportThread = task.spawn(sequentialTeleport)
+	else
+		toggleButton.Text = "Start"
+	end
 end)
